@@ -655,6 +655,7 @@ textarea.form-field {
   border-radius: 18px;
   background-color: #fff;
   display: flex;
+  z-index: 85;
 }
 
 .open-chat svg {
@@ -673,6 +674,16 @@ textarea.form-field {
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
+  transform: translateY(100%);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out, visibility 0.3s ease-out;
+}
+
+.chat-container--visible {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
 }
 
 .chat-log {
@@ -732,4 +743,16 @@ textarea.form-field {
   font-size: 0.85rem;
   outline: none;
   border-top: 1px solid #e6e6e6;
+}
+
+.chat-unread-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: red;
+  color: #fff;
+  border-radius: 20px;
+  padding: 2px 4px;
+  line-height: 1;
+  font-size: 0.75rem;
 }
