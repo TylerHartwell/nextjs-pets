@@ -8,11 +8,14 @@ export default function Footer(props) {
   function AdminFooterOrNot() {
     if (props.isAdmin) {
       return (
-        <p className="logout-text">
-          <a href="" onClick={handleClick}>
-            Logout
-          </a>
-        </p>
+        <>
+          <div className="open-chat"></div>
+          <p className="logout-text">
+            <a href="" onClick={handleClick}>
+              Logout
+            </a>
+          </p>
+        </>
       )
     } else {
       return <></>
