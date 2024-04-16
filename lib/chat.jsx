@@ -1,8 +1,26 @@
-import { useState } from "react"
+import Pusher from "pusher-js"
+import { useState, useEffect } from "react"
 
 export default function Chat() {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [socketId, setSocketId] = useState()
+
+  useEffect(() => {
+    const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHERKEY, {
+      cluster: "us3"
+    })
+
+    pusher.connection.bind("conected", () => {
+      setSocketId(pusher.connection.socket_id)
+    })
+
+    const channel = pusher.subscribe("private-petchat")
+
+    channel.bind("message", data => {
+      console.log(data)
+    })
+  }, [])
 
   function openChatClick() {
     setIsChatOpen(true)
@@ -10,6 +28,17 @@ export default function Chat() {
   }
   function closeChatClick() {
     setIsChatOpen(false)
+  }
+
+  function handleChatSubmit(e) {
+    e.preventDefault()
+    fetch("/admin/send-chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ message: "Unicorn pizza", socket_id: socketId })
+    })
   }
 
   return (
@@ -63,7 +92,7 @@ export default function Chat() {
             </div>
           </div>
         </div>
-        <form>
+        <form onSubmit={handleChatSubmit}>
           <input type="text" autoComplete="off" placeholder="Your message here" />
         </form>
       </div>
