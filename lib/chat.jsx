@@ -1,30 +1,46 @@
 import Pusher from "pusher-js"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 export default function Chat() {
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [socketId, setSocketId] = useState()
+  const [messageLog, setMessageLog] = useState([])
+  const [userMessage, setUserMessage] = useState("")
+  const chatField = useRef(null)
+  const chatLogElement = useRef(null)
 
   useEffect(() => {
     const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHERKEY, {
       cluster: "us3"
     })
 
-    pusher.connection.bind("conected", () => {
+    pusher.connection.bind("connected", () => {
       setSocketId(pusher.connection.socket_id)
     })
 
     const channel = pusher.subscribe("private-petchat")
 
     channel.bind("message", data => {
-      console.log(data)
+      setMessageLog(prev => [...prev, data])
     })
   }, [])
+
+  useEffect(() => {
+    if (messageLog.length) {
+      chatLogElement.current.scrollTop = chatLogElement.current.scrollHeight
+      if (!isChatOpen) {
+        setUnreadCount(prev => prev + 1)
+      }
+    }
+  }, [messageLog])
 
   function openChatClick() {
     setIsChatOpen(true)
     setUnreadCount(0)
+    setTimeout(() => {
+      chatField.current.focus()
+    }, 350)
   }
   function closeChatClick() {
     setIsChatOpen(false)
@@ -37,8 +53,14 @@ export default function Chat() {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ message: "Unicorn pizza", socket_id: socketId })
+      body: JSON.stringify({ message: userMessage.trim(), socket_id: socketId })
     })
+    setMessageLog(prev => [...prev, { selfMessage: true, message: userMessage }])
+    setUserMessage("")
+  }
+
+  function handleInputChange(e) {
+    setUserMessage(e.target.value)
   }
 
   return (
@@ -71,29 +93,24 @@ export default function Chat() {
             <path d="M2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zm3.354 4.646L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 1 1 .708-.708" />
           </svg>
         </div>
-        <div className="chat-log">
-          <div className="chat-message">
-            <div className="chat-message-inner">
-              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Deleniti beatae laudantium voluptas dolorum ad at dolor,
-              minus dolorem nam. Sunt quam praesentium, beatae expedita deleniti rerum totam quas unde inventore.
-            </div>
-          </div>
-          <div className="chat-message">
-            <div className="chat-message-inner">
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. Atque pariatur ducimus placeat velit nobis id enim tenetur
-              facere nihil perferendis alias rem eius distinctio, perspiciatis maxime illo laudantium numquam excepturi!
-            </div>
-          </div>
-          <div className="chat-message chat-message--self">
-            <div className="chat-message-inner">
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit. At dolorum repudiandae soluta non, error sapiente culpa
-              eaque quaerat recusandae illo sint voluptas tempora perspiciatis totam officiis necessitatibus numquam laborum
-              incidunt?
-            </div>
-          </div>
+        <div ref={chatLogElement} className="chat-log">
+          {messageLog.map((item, index) => {
+            return (
+              <div key={index} className={`chat-message ${item.selfMessage ? "chat-message--self" : ""}`}>
+                <div className="chat-message-inner">{item.message}</div>
+              </div>
+            )
+          })}
         </div>
         <form onSubmit={handleChatSubmit}>
-          <input type="text" autoComplete="off" placeholder="Your message here" />
+          <input
+            value={userMessage}
+            ref={chatField}
+            onChange={handleInputChange}
+            type="text"
+            autoComplete="off"
+            placeholder="Your message here"
+          />
         </form>
       </div>
     </>
