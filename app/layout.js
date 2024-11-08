@@ -19,6 +19,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={ss3.className}>
+        <p className="text-center">
+          Disclaimer: This is a mock pet adoption site and is not affiliated with any real animal adoption services. No animals are actually available
+          for adoption.
+        </p>
         {children}
         <Footer isAdmin={isAdmin} />
       </body>
